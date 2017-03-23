@@ -48,3 +48,30 @@ def fetch_dict(form, keys, default=None):
         v = form.get(k, default)
         ds[k] = v
     return ds
+
+
+# eg : mysql.proxy rows
+
+def sort_rows(rows, key):
+    # python2 cmp
+    # func = lambda a, b: cmp(a.get(key), b.get(key))
+    # ds = sort(rows, cmp=func)
+    # python3, cmp is deprecated
+    func = lambda x: x.get(key)
+    ds = sorted(rows, key=func)
+    return ds
+
+
+def include(form, query):
+    for k, v in query.items():
+        dv = form.get(k)
+        if dv != v:
+            return False
+    return True
+
+
+def filter_rows(rows, query):
+    from functools import partial
+    func = partial(include, query=query)
+    ds = list(filter(func, rows))
+    return ds
