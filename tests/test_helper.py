@@ -5,6 +5,9 @@ from  pyco_utils.helpler import (
     list2dict,
     str2dict,
     fetch_dict,
+    include,
+    sort_rows,
+    filter_rows,
 )
 
 
@@ -65,4 +68,36 @@ def test_fetch_dict():
     ds = fetch_dict(form, keys)
     assert len(ds) == 2
 
+
+def test_include():
+    ds = dict(
+        a=111,
+        b=222,
+    )
+    q1 = dict(a=111)
+    q2 = dict(b=111)
+    assert include(ds, q1) == True
+    assert include(ds, q2) == False
+
+
+def test_sort_rows():
+    rs = [
+        {'a': 111, 'b': 123},
+        {'a': 101, 'b': 122, 'c': 2},
+        {'a': 121, 'b': 123, 'c': 4},
+    ]
+    ds = sort_rows(rs, 'a')
+    assert len(ds) == len(rs)
+    assert ds[0]['a'] == 101
+
+
+def test_filter_rows():
+    rs = [
+        {'a': 111, 'b': 123},
+        {'a': 101, 'b': 122, 'c': 2},
+        {'a': 121, 'b': 123, 'c': 4},
+    ]
+    q = dict(b=123)
+    ds = filter_rows(rs, q)
+    assert len(ds) == 2
 
