@@ -1,0 +1,16 @@
+/Dockerfile
+.git/
+
+**/*.swp
+**/*.swo
+
+**/*.pyc
+**/*.min.min.*
+.tox
+.coveragerc
+.coverage
+**/__pycache__
+tests/
+temp/
+src/local_config.py
+.gpr
