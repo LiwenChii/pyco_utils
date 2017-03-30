@@ -1,4 +1,5 @@
 # -*- coding:utf-8 -*-
+import sys
 import oss2
 
 ACCESS_KEY_ID = ''
@@ -24,6 +25,7 @@ def blob_urls(prefix='', max_keys=100):
     urls = [aliyun_blob_root + obj.key for obj in objects]
     return urls
 
+
 def upload(filename, path='.'):
     file = '{}/{}'.format(path, filename)
     with open(file, 'rb') as fs:
@@ -45,6 +47,13 @@ def download(key, filename='', save=True):
         warn = '[warn]: "{key}" dose not exist.'.format(key=key)
         print(warn)
 
+
+def download_zips(prefix, count, stay=True):
+    for i in range(1, count + 1):
+        key = prefix + '%03d' % (i)
+        reps1 = aliyun_bucket.object_exists(key)
+        if reps1:
+            download(key, stay=stay)
 
 
 def percentage(consumed_bytes, total_bytes):
@@ -71,3 +80,32 @@ def delete_keys(keys):
         reps = delete_key(key=key)
         print(reps.status)
 
+
+######## brew install p7zip
+######## 7z a -v1G baidu_search.zip baidu_search
+import os
+
+
+def file2zip(filename, path='.', zipfile=''):
+    if not zipfile:
+        zipfile = '{filename}.zip'.format(filename=filename)
+    command = '7z a -v500m {} {}/{}'.format(zipfile, path, filename)
+    print(command)
+    os.system(command)
+    return zipfile
+
+
+def list_file_with_prefix(prefix, path='.'):
+    files = []
+    for f in os.listdir(path):
+        if f.startswith(prefix):
+            files.append(f)
+    return files
+
+
+def upload_zipfile(filename, path='', zipfile=''):
+    zipfile = file2zip(filename, path, zipfile)
+    zip_files = list_file_with_prefix(prefix=zipfile, path=path)
+    for i, zf in enumerate(zip_files):
+        print('[{i}] upload to oss : [{filename}]'.format(i=i, filename=filename))
+        # upload(zf, path)

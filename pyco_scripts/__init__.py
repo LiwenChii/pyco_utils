@@ -13,5 +13,7 @@ def command(args, kwargs=''):
     print(kwargs, type(kwargs))
 
 
+
+
 if __name__ == '__main__':
     manager.main()
