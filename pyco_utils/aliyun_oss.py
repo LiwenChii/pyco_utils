@@ -45,3 +45,29 @@ def download(key, filename='', save=True):
         warn = '[warn]: "{key}" dose not exist.'.format(key=key)
         print(warn)
 
+
+
+def percentage(consumed_bytes, total_bytes):
+    if total_bytes:
+        rate = int(100 * (float(consumed_bytes) / float(total_bytes)))
+        print('\r{0}/{1}    {2}% '.format(consumed_bytes, total_bytes, rate))
+        sys.stdout.flush()
+
+
+def list_keys(prefix='', delimiter='', marker='', max_keys=100):
+    reps = aliyun_bucket.list_objects(prefix, delimiter, marker, max_keys)
+    if reps.status == 200:
+        object_list = reps.object_list
+        keys = [obj.key for obj in object_list]
+        return keys
+
+
+def delete_key(key):
+    aliyun_bucket.delete_object(key=key)
+
+
+def delete_keys(keys):
+    for key in keys:
+        reps = delete_key(key=key)
+        print(reps.status)
+
