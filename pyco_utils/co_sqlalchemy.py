@@ -4,14 +4,17 @@ from datetime import datetime, timedelta
 from sqlalchemy import (
     create_engine,
     text,
+    orm,
     Column,
     Integer,
     String,
     Boolean,
     DateTime,
+    TIMESTAMP,
+    ForeignKey,
 )
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.dialects.mysql.base import MEDIUMTEXT
 
 import os
 
@@ -26,7 +29,7 @@ db_uri = env('SQLALCHEMY_DATABASE_URI',
 
 db_engine = create_engine(db_uri, echo=True)
 
-Session = sessionmaker(bind=db_engine)
+Session = orm.sessionmaker(bind=db_engine)
 
 session = Session()
 
@@ -56,12 +59,21 @@ def execute(sql, engine=db_engine, **kwargs):
         return result
 
 
-class Relog(BaseModel):
+class User(BaseModel):
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True, autoincrement=True, unique=True)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
+
+
+class Book(BaseModel):
     __tablename__ = 'relog'
-    id = Column(Integer, primary_key=True)
-    reported_at = Column(DateTime, default=datetime.utcnow)
-    is_success = Column(Boolean)
-    request_id = Column(String(64))
+    id = Column(Integer, primary_key=True, autoincrement=True, unique=True)
+    create_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(TIMESTAMP, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
+    owner_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
+    readers = orm.relationship('User', uselist=True, backref=orm.backref('book', lazy='select'))
+    title = Column(String(64))
+    content = Column(MEDIUMTEXT)
 
     def __init__(self, form):
         pass
@@ -78,5 +90,3 @@ class Relog(BaseModel):
         session.delete(self)
         session.commit()
         return self
-
-
