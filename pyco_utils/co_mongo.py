@@ -1,31 +1,23 @@
-# -*- coding:utf-8 -*-
-
-__author__ = 'nico'
+import os
 import pymongo
 from bson import ObjectId
-from src.settings import current_settings
-
-mongo_client = pymongo.MongoClient(current_settings.MONGO_URI)
-mongo_db = mongo_client[current_settings.MONGO_DB]
-mongo_collection = mongo_db.get_collection(current_settings.MONGO_COLLECTION)
 
 
 class CoMongo(object):
-    client = mongo_client
-    db = mongo_db
-    collection = mongo_collection
+    client = None
+    db = None
+    collection = None
 
-    def __init__(self, collection=None):
-        if bool(collection):
-            self.collection = self.db[collection]
-        else:
-            self.collection = CoMongo.collection
+    def __init__(self, db_name, collection_name, uri=None):
+        self.client = pymongo.MongoClient(uri)
+        self.db = self.client[db_name]
+        self.collection_name = self.db[collection_name]
 
-    @staticmethod
-    def ensure_collection(collection=current_settings.MONGO_COLLECTION):
-        collections = CoMongo.db.collection_names()
-        if collection not in collections:
-            CoMongo.db.create_collection(collection)
+    @classmethod
+    def is_siblings(cls, collection_name):
+        collections = cls.db.collection_names()
+        if collection_name not in collections:
+            cls.db.create_collection(collection_name)
 
     def insert_item(self, item, _id=None):
         if _id is not None:
@@ -69,4 +61,4 @@ class CoMongo(object):
         return raw_list
 
 
-co_mongo = CoMongo()
+co_mongo = CoMongo('project', 'model')
