@@ -66,6 +66,22 @@ def fetch_dict(form, keys, default=None):
     return ds
 
 
+def mirror_dict(form):
+    '''dict(
+        a=dict(x=0,y=1),     ==>   x=dict(a=0, b=0),
+        b=dict(x=0,y=1),     ==>   y=dict(a=1, b=1),
+    )
+    '''
+    result = {}
+    if bool(form) and isinstance(form, dict):
+        from_keys = form.keys()
+        items = form.values()
+        to_keys = items[0].keys()
+        result = {tk: dict(map(lambda fk, item: (fk, item.get(tk)), from_keys, items)) for tk in to_keys}
+        return result
+    return result
+
+
 # eg : mysql.proxy rows
 
 def sort_rows(rows, key):
