@@ -2,6 +2,8 @@ import os
 import sys
 import string
 import random
+import re
+from hashlib import md5
 
 
 def pardir(path, depth=1):
@@ -18,6 +20,20 @@ def source_root(path):
 def short_uuid(length):
     charset = string.ascii_letters + string.digits
     return ''.join([random.choice(charset) for i in range(length)])
+
+
+def camel_to_underscore(name):
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+
+
+def md5sum(content):
+    m = md5()
+    if not isinstance(content, bytes):
+        content = content.encode('utf-8').strip()
+    m.update(content)
+    s = m.hexdigest().lower()
+    return s
 
 
 def str2list(text, line_sep='\n', strip_chars=None, filter_func=None):
