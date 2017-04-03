@@ -1,3 +1,5 @@
+# coding: utf-8
+
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 
@@ -37,10 +39,32 @@ from flask import (
 app = Flask(__name__)
 app.secret_key = 'key'
 
-redis_client = redis.Redis()
+
+@app.route('/map')
+def url_map():
+    def format_map(url_map):
+        rules = url_map._rules
+        total = len(rules)
+        urls = []
+        for rule in rules:
+            u = dict(rule=rule.rule,
+                     endpoint=rule.endpoint,
+                     args=list(rule.arguments),
+                     methods=list(rule.methods))
+            urls.append(u)
+        data = dict(total=total, urls=urls)
+        return data
+
+    url_map = app.url_map
+    url_map = format_map(url_map)
+    data = dict(url_map=url_map)
+    data = jsonify(data)
+    return data, 200
 
 
 # default: host='localhost', port=6379, db=0
+redis_client = redis.Redis()
+
 
 def stream(channel):
     # 对每一个用户 创建一个[发布订阅]对象
@@ -66,4 +90,3 @@ def channel_subscribe(channel):
     #         RespMsg(msg);
     #     };
     # };
-
