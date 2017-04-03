@@ -40,3 +40,21 @@ def singleton(cls):
         return instance[cls]
 
     return get_instance
+def pf_time(func):
+    '''
+    @pf_time
+    def func():
+        pass
+    '''
+    t1 = time.time()
+
+    def wrapper(*args, **kwargs):
+        m = func(*args, **kwargs)
+        t2 = time.time()
+        tm = t2 - t1
+        msg = '{}, {}ms \n<{}>\n'.format(func.__name__, tm, pformat(m))
+        print(msg)
+        return m
+
+    return wrapper
+
