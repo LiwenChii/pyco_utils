@@ -107,3 +107,11 @@ def filter_rows(rows, query):
     func = partial(include, query=query)
     ds = list(filter(func, rows))
     return ds
+
+
+def proxy_wget(url, file='temp.html'):
+    # command = 'proxychains4 wget www.google.com'
+    command = 'proxychains4 wget -O "{file}" "{url}"'.format(file=file, url=url)
+    os.system(command)
+    with open(file, 'r+') as f:
+        return f.read()
