@@ -1,13 +1,30 @@
 # coding: utf-8
 
+import time
+from pprint import pformat
 import threading
-from functools import wraps
+from functools import (
+    wraps,
+    reduce,
+)
+
+from werkzeug.exceptions import (
+    TooManyRequests,
+    GatewayTimeout,
+    RequestTimeout,
+)
 
 from .logger import log
 
 
 def retry(func, count=3):
-    def decorator(*args, **kwargs):
+    '''
+    @retry
+    def func():
+        pass
+    '''
+
+    def wrapper(*args, **kwargs):
         for i in range(count - 1):
             try:
                 return func(*args, **kwargs)
@@ -16,7 +33,7 @@ def retry(func, count=3):
                 log(e)
         return func(*args, **kwargs)
 
-    return decorator
+    return wrapper
 
 
 def ajax_func(func, daemon=True):
@@ -31,7 +48,12 @@ def ajax_func(func, daemon=True):
 
 
 def singleton(cls):
+    '''
     # 使用这个装饰器的类，不能作为父类被继承
+    @singleton
+    class Settings(object):
+        pass
+    '''
     instance = {}
 
     def get_instance(*args, **kwargs):
@@ -40,6 +62,8 @@ def singleton(cls):
         return instance[cls]
 
     return get_instance
+
+
 def pf_time(func):
     '''
     @pf_time
@@ -58,3 +82,58 @@ def pf_time(func):
 
     return wrapper
 
+
+def retry_api(count=3, delay=30, exceptions=None):
+    '''
+    @retry_api()
+    def fac(n):
+        m = reduce(lambda x, y: x * y, range(1, n + 1))
+        return m
+    '''
+    if exceptions is None:
+        exceptions = (
+            RequestTimeout,
+            GatewayTimeout,
+            TooManyRequests,
+        )
+
+    def deco(func):
+
+        def wrapper(*args, **kwargs):
+            for i in range(count - 1):
+                try:
+                    return func(*args, **kwargs)
+                except exceptions as e:
+                    time.sleep(delay)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return deco
+
+
+def _retry_api(func, count=3, delay=30, exceptions=None):
+    '''
+    @_retry_api
+    def fac(n):
+        m = reduce(lambda x, y: x * y, range(1, n + 1))
+        return m
+
+    '''
+    if exceptions is None:
+        exceptions = (
+            RequestTimeout,
+            GatewayTimeout,
+            TooManyRequests,
+        )
+
+    def wrapper(*args, **kwargs):
+        for i in range(count - 1):
+            try:
+                return func(*args, **kwargs)
+            except exceptions as e:
+                time.sleep(delay)
+
+        return func(*args, **kwargs)
+
+    return wrapper
