@@ -5,6 +5,34 @@ import random
 import re
 from hashlib import md5
 
+from datetime import datetime, timedelta
+import time
+
+
+
+def clock_ts(time_point=0, secs=0, mins=0, hours=0, days=0):
+    '''
+    :param time_point, secs,  mins,  hours,  days: int (1,0,-1)
+    '''
+    if time_point == 0:
+        time_point = int(time.time())
+    interval = secs + mins * 60 + hours * 3600 + days * 3600 * 24
+    time_point = time_point + interval
+    return time_point
+
+
+# def format_date(date, style='%Y-%m-%d %H:%M', zone=0):
+#     if isinstance(date, int):
+#         date = datetime.fromtimestamp(date)
+#     if isinstance(date, str):
+#         from dateutil.parser import parse
+#         date = parse(date)
+#     if isinstance(date, datetime):
+#         date = date + timedelta(hours=zone)
+#         dt = date.strftime(style)
+#         return dt
+#     else:
+#         return '0000-00-00 00:00'
 
 def pardir(path, depth=1):
     path = os.path.abspath(path)
