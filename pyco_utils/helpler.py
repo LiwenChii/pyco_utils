@@ -9,7 +9,6 @@ from datetime import datetime, timedelta
 import time
 
 
-
 def clock_ts(time_point=0, secs=0, mins=0, hours=0, days=0):
     '''
     :param time_point, secs,  mins,  hours,  days: int (1,0,-1)
@@ -135,6 +134,37 @@ def filter_rows(rows, query):
     func = partial(include, query=query)
     ds = list(filter(func, rows))
     return ds
+
+
+def format_dict(form, nullable=False, autoInt=True, autoBool=True, autoDrop=True):
+    '''
+    :param form: request_form
+    :param nullable: 是否抛弃键值空
+    :param autoInt:  是否检测字符串，并自动转换数值型
+    :param autoBool: 是否检测字符串，并自动转换布尔型
+    :param autoDrop: 是否抛弃空字符串键值，
+    :return:
+    '''
+    data = {}
+    for k, v in form.items():
+        if not nullable and v is None:
+            print('drop<{}:{}>'.format(k, v))
+        elif isinstance(v, str):
+            v = v.strip()
+            s = v.lower()
+            if autoDrop and not (bool(v)):
+                print('drop<{}:{}>'.format(k, v))
+            elif autoInt and v.isdigit():
+                data[k] = int(v)
+            elif autoBool and s == 'false':
+                data[k] = False
+            elif autoBool and s == 'true':
+                data[k] = True
+            else:
+                data[k] = v
+        else:
+            data[k] = v
+    return data
 
 
 def proxy_wget(url, file='temp.html'):
