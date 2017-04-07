@@ -1,97 +1,97 @@
 from __future__ import absolute_import
-import os
+
 import logging
 from functools import wraps
 from pprint import pformat
 
-from requests import Response
 
-LOG_LEVEL = logging.INFO
-LEVEL_ERROR = 'error'
-LOGGER_NAME = '{project_name}'
-LOGGER_FILE = '{project_name}.log'
-LOGGER_FORMATTER = '[%(asctime)s]%(message)s'
+fmt_str = '[%(asctime)s]%(message)s'
+fmt = logging.Formatter(fmt_str)
 
 
-def ensure_dir(file):
-    fdir = os.path.dirname(file)
-    if not os.path.exists(fdir):
-        os.makedirs(fdir)
-
-
-def LocalLogger(**kwargs):
-    level = kwargs.get('level', LOG_LEVEL)
-    logger_name = kwargs.get('name', LOGGER_NAME)
-    logger_file = kwargs.get('filename', LOGGER_FILE)
-    mode = kwargs.get('filemode', 'a+')
-    fs = kwargs.get('format', LOGGER_FORMATTER)
-    fmt = logging.Formatter(fs)
-    ensure_dir(logger_file)
-    hdlr = logging.FileHandler(filename=logger_file, mode=mode)
+def file_hdl(fmt=fmt, level=logging.ERROR, logfile='.log'):
+    hdlr = logging.FileHandler(filename=logfile, mode='a+')
     hdlr.setFormatter(fmt)
-    logger = logging.Logger(logger_name)
-    logger.addHandler(hdlr=hdlr)
-    logger.setLevel(level=level)
-    return logger
+    hdlr.setLevel(level)
+    return hdlr
 
 
-local_logger = LocalLogger()
+def stream_hdl(fmt=fmt, level=logging.ERROR):
+    hdlr = logging.StreamHandler()
+    hdlr.setFormatter(fmt)
+    hdlr.setLevel(level)
+    return hdlr
+
+
+def logger(name='COLOG', **kwargs):
+    lg = logging.Logger(name)
+    hd1 = file_hdl(**kwargs)
+    hd2 = stream_hdl(*kwargs)
+    lg.addHandler(hdlr=hd1)
+    lg.addHandler(hdlr=hd2)
+    return lg
+
+
+local_logger = logger()
 
 
 def log(*args, **kwargs):
-    logger = local_logger
-    level = kwargs.pop('level', None)
-    stdout = kwargs.pop('stdout', False)
+    lg = local_logger
+    level = kwargs.pop('level', logging.INFO)
     result = kwargs.pop('result', None)
-    content = "{} {}".format(pformat(args), pformat(kwargs))
+    msg = "{} {}".format(pformat(args), pformat(kwargs))
     if result is not None:
-        content += '\n[result] : {}'.format(result)
-    if level == LEVEL_ERROR:
-        logger.error(content)
-    else:
-        logger.info(content)
-        logger.log(level)
-    if stdout:
-        print(content)
-
-
-def log_response(resp, tag='', status_filter=None):
-    if isinstance(resp, Response):
-        if status_filter is None:
-            status_filter = [200]
-        status_code = resp.status_code
-        if status_code not in status_filter:
-            content = resp.content
-            url = resp.url
-            tag = '[API - {}] - {}'.format(tag, status_code)
-            request = resp.request
-            request_body = request.body if request else None
-            request_headers = dict(request.headers) if request else None
-            log(tag, url,
-                level='error',
-                status_code=status_code,
-                response_content=content,
-                request_body=request_body,
-                request_headers=request_headers
-                )
-
-
-def log_response_after_func(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        resp = func(*args, **kwargs)
-        tag = func.func_name
-        log_response(resp, tag=tag)
-        return resp
-
-    return wrapper
+        msg += '\n[result] : {}'.format(result)
+    lg.log(level, msg)
 
 
 def log_func(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         result = func(*args, **kwargs)
-        log(func.__name__, *args, result=result, **kwargs)
+        log(func.__name__, args, kwargs, result=result)
         return result
 
     return wrapper
+
+
+def log_response_after_func(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        resp = func(*args, **kwargs)
+        tag = func.__name__
+        log_response(resp, tag=tag)
+        return resp
+
+    return wrapper
+
+
+def log_response(resp, tag=''):
+    # from requests import Response
+    # isinstance(resp, Response):
+    status_code = resp.status_code
+    if status_code != 200:
+        level = logging.ERROR
+    else:
+        level = logging.INFO
+    url = resp.url
+    result = format_response(resp)
+    log(status_code, url, tag=tag, level=level, result=result)
+
+
+def format_response(response):
+    url = response.url
+    status_code = response.status_code
+    content = response.content
+    info = dict(
+        url=url,
+        status_code=status_code,
+        content=content,
+    )
+    request = response.request
+    if request:
+        info['request_body'] = request.body
+        info['request_method'] = request.method
+        info['request_headers'] = request.headers
+    msg = '[Response]' + '\n' + pformat(info, indent=4) + '\n'
+    return msg
