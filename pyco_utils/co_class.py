@@ -1,34 +1,20 @@
-class EchoCls(object):
-    # todo
-    def __getattr__(self, name):
-        def wrap(*args):
-            m = name if args is None else name + str(tuple(args))
-            print(m)
-            return self.name
-
-        return wrap
-
-
-from flask.json import JSONEncoder
-from datetime import datetime
-import calendar
+from json import JSONEncoder
+from datetime import (
+    datetime,
+    timedelta,
+)
 
 
 class CustomJSONEncoder(JSONEncoder):
     def default(self, obj):
-        try:
-            if isinstance(obj, datetime):
-                if obj.utcoffset() is not None:
-                    obj = obj - obj.utcoffset()
-                return int(
-                    calendar.timegm(obj.timetuple())
-                )
-            iterable = iter(obj)
-        except TypeError:
-            pass
+        if isinstance(obj, datetime):
+            t = obj.strftime('%Y/%m/%d %H:%M:%S')
+            return t
+        elif isinstance(obj, timedelta):
+            t = str(obj)
+            return t
         else:
-            return list(iterable)
-        return JSONEncoder.default(self, obj)
+            return JSONEncoder.default(self, obj)
 
 
 class Utf8Encoder:
