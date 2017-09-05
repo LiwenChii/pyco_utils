@@ -4,7 +4,6 @@ import logging
 from functools import wraps
 from pprint import pformat
 
-
 fmt_str = '[%(asctime)s]%(message)s'
 fmt = logging.Formatter(fmt_str)
 
@@ -39,10 +38,13 @@ def log(*args, **kwargs):
     lg = local_logger
     level = kwargs.pop('level', logging.INFO)
     result = kwargs.pop('result', None)
+    stdout = kwargs.pop('stdout', False)
     msg = "{} {}".format(pformat(args), pformat(kwargs))
     if result is not None:
         msg += '\n[result] : {}'.format(result)
     lg.log(level, msg)
+    if stdout:
+        print(msg)
 
 
 def log_func(func):
