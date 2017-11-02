@@ -40,7 +40,7 @@ def sort_rows(rows, key):
     return ds
 
 
-def include(form, query):
+def ensure_field(form, query):
     for k, v in query.items():
         dv = form.get(k)
         if dv != v:
@@ -50,7 +50,7 @@ def include(form, query):
 
 def filter_rows(rows, query):
     from functools import partial
-    func = partial(include, query=query)
+    func = partial(ensure_field, query=query)
     ds = list(filter(func, rows))
     return ds
 
