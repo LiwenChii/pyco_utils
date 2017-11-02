@@ -7,6 +7,12 @@ def ensure_path(path):
         os.makedirs(path)
 
 
+def command(cmd):
+    status = os.system(cmd)
+    code = os.WEXITSTATUS(status)
+    return code == 0
+
+
 def list_file_with_prefix(prefix, path='.'):
     files = []
     for f in os.listdir(path):
@@ -19,9 +25,7 @@ def resize_image(image='', w=64, h=64):
     name, ext = image.rsplit('.', 1)
     t = '{}_{}x{}.{}'.format(name, w, h, ext)
     cmd = 'magick {} -resize 64x64 {}'.format(image, t)
-    status = os.system(cmd)
-    code = os.WEXITSTATUS(status)
-    return code == 0
+    return command(cmd)
 
 
 def zipfile(filename, path='.', zipname=''):
@@ -30,16 +34,13 @@ def zipfile(filename, path='.', zipname=''):
     # 压缩文件上传
     if zipname == '':
         zipname = '{filename}.zip'.format(filename=filename)
-    command = '7z a -v500m {} {}/{}'.format(zipname, path, filename)
-    status = os.system(command)
-    code = os.WEXITSTATUS(status)
-    print(command, code)
-    return code
+    cmd = '7z a -v500m {} {}/{}'.format(zipname, path, filename)
+    return command(cmd)
 
 
 def proxy_wget_file(url, file='temp.html'):
     # command = 'proxychains4 wget www.google.com'
-    command = 'proxychains4 wget -O "{file}" "{url}"'.format(file=file, url=url)
-    os.system(command)
-    with open(file, 'r+') as f:
-        return f.read()
+    cmd = 'proxychains4 wget -O "{file}" "{url}"'.format(file=file, url=url)
+    if command(cmd):
+        with open(file, 'r+') as f:
+            return f.read()
