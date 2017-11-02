@@ -35,3 +35,11 @@ def zipfile(filename, path='.', zipname=''):
     code = os.WEXITSTATUS(status)
     print(command, code)
     return code
+
+
+def proxy_wget_file(url, file='temp.html'):
+    # command = 'proxychains4 wget www.google.com'
+    command = 'proxychains4 wget -O "{file}" "{url}"'.format(file=file, url=url)
+    os.system(command)
+    with open(file, 'r+') as f:
+        return f.read()
