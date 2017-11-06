@@ -65,15 +65,13 @@ def log_time(func):
     return wrapper
 
 
-from .logger import log
-
-
 def retry(func, count=3):
     '''
     @retry
     def func():
         pass
     '''
+    from .colog import format_func
 
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -81,8 +79,8 @@ def retry(func, count=3):
             try:
                 return func(*args, **kwargs)
             except Exception as e:
-                log('[retry Error]', func.__name__, *args, **kwargs)
-                log(e)
+                m = format_func(func.__name__, *args, **kwargs)
+                print('[retry Error]\t{}\n\{}'.format(e, m))
         return func(*args, **kwargs)
 
     return wrapper

@@ -2,12 +2,12 @@
 from functools import wraps
 
 
-def format_func(cls, name, *args, **kwargs):
+def format_func(name, *args, **kwargs):
     t1 = ', '.join(str(x) for x in args)
     t2 = ''
     if kwargs:
         t2 = ', ' + ', '.join('{}={}'.format(k, v) for k, v in kwargs.items())
-    text = '{}.{}({}{})'.format(cls, name, t1, t2)
+    text = '{}({}{})'.format(name, t1, t2)
     return text
 
 
@@ -18,7 +18,7 @@ class Alog(object):
             # Alog.attr_func.__name__ = 'wrap'
             m = super(Alog, self).__getattribute__(name)(*args, **kwargs)
             if name.startswith('api'):
-                d = '{} ==> {}'.format(format_func(self.__class__, name, *args, **kwargs), m)
+                d = '{}.{} ==> {}'.format(self.__class__.__name__, format_func(name, *args, **kwargs), m)
                 print(d)
             return m
 
@@ -37,7 +37,7 @@ class Flog(object):
             def wrap(*args, **kwargs):
                 m = func(*args, **kwargs)
                 if not name.startswith('_'):
-                    d = '{} ==> {}'.format(format_func(self.__class__.__name__, name, *args, **kwargs), m)
+                    d = '{}.{} ==> {}'.format(self.__class__.__name__, format_func(name, *args, **kwargs), m)
                     print(d)
                 return m
 
@@ -50,6 +50,6 @@ class Mlog(Flog):
         # func = getattr(self, name)
         # 当并不存在属性值时候，才会 getattr
         def wrap(*args, **kwargs):
-            print('!!!', format_func(self.__class__.__name__, name, *args, **kwargs))
+            print('!!!{}.{}'.format(self.__class__.__name__, format_func(name, *args, **kwargs)))
 
         return wrap
