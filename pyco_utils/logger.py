@@ -31,20 +31,30 @@ def logger(name='COLOG', **kwargs):
     return lg
 
 
-local_logger = logger()
+class SingleLogger(object):
+    __instance = None
+
+    def __new__(cls, **kwargs):
+        if cls.__instance is None:
+            cls.__instance = logger(**kwargs)
+        return cls.__instance
+
+    @classmethod
+    def level(cls, level=logging.DEBUG):
+        if cls.__instance is not None:
+            hdls = cls.__instance.handlers
+            for hdl in hdls:
+                hdl.level = level
 
 
 def log(*args, **kwargs):
-    lg = local_logger
+    logger = SingleLogger()
     level = kwargs.pop('level', logging.INFO)
     result = kwargs.pop('result', None)
-    stdout = kwargs.pop('stdout', False)
     msg = "{} {}".format(pformat(args), pformat(kwargs))
     if result is not None:
         msg += '\n[result] : {}'.format(result)
-    lg.log(level, msg)
-    if stdout:
-        print(msg)
+    logger.log(level, msg)
 
 
 def log_func(func):
