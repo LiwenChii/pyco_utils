@@ -14,34 +14,14 @@ from werkzeug.exceptions import (
     RequestTimeout,
 )
 
-from .logger import log
 
-
-def retry(func, count=3):
-    '''
-    @retry
-    def func():
-        pass
-    '''
-
-    def wrapper(*args, **kwargs):
-        for i in range(count - 1):
-            try:
-                return func(*args, **kwargs)
-            except Exception as e:
-                log('[retry Error]', func.__name__, *args, **kwargs)
-                log(e)
-        return func(*args, **kwargs)
-
-    return wrapper
-
+# 注意 wraps 是必须的。
 
 def ajax_func(func, daemon=True):
     @wraps(func)
     def wrapper(*args, **kwargs):
         th = threading.Thread(target=func, args=args, kwargs=kwargs)
         th.daemon = daemon
-        log(func.__name__, args, kwargs, daemon)
         th.start()
 
     return wrapper
@@ -56,6 +36,7 @@ def singleton(cls):
     '''
     instance = {}
 
+    @wraps(cls)
     def get_instance(*args, **kwargs):
         if cls not in instance:
             instance[cls] = cls(*args, **kwargs)
@@ -66,12 +47,13 @@ def singleton(cls):
 
 def log_time(func):
     '''
-    @pf_time
+    @log_time
     def func():
         pass
     '''
     t1 = time.time()
 
+    @wraps(func)
     def wrapper(*args, **kwargs):
         m = func(*args, **kwargs)
         t2 = time.time()
@@ -79,6 +61,29 @@ def log_time(func):
         msg = '{}, {}ms \n<{}>\n'.format(func.__name__, tm, pformat(m))
         print(msg)
         return m
+
+    return wrapper
+
+
+from .logger import log
+
+
+def retry(func, count=3):
+    '''
+    @retry
+    def func():
+        pass
+    '''
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        for i in range(count - 1):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                log('[retry Error]', func.__name__, *args, **kwargs)
+                log(e)
+        return func(*args, **kwargs)
 
     return wrapper
 
@@ -99,6 +104,7 @@ def retry_api(count=3, delay=30, exceptions=None):
 
     def deco(func):
 
+        @wraps(func)
         def wrapper(*args, **kwargs):
             for i in range(count - 1):
                 try:
@@ -127,6 +133,7 @@ def _retry_api(func, count=3, delay=30, exceptions=None):
             TooManyRequests,
         )
 
+    @wraps(func)
     def wrapper(*args, **kwargs):
         for i in range(count - 1):
             try:
