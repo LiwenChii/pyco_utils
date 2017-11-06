@@ -64,7 +64,7 @@ def singleton(cls):
     return get_instance
 
 
-def pf_time(func):
+def log_time(func):
     '''
     @pf_time
     def func():
